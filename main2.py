@@ -108,7 +108,7 @@ def draw_text(text, font, text_col, x, y):
 
 
 # create spaceship class
-class Spaceship(pygame.sprite.Sprite):
+class Gun(pygame.sprite.Sprite):
     def __init__(self, x, y, health):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.image.load("img/gun.png")
@@ -173,12 +173,12 @@ class ScoreBoard():
     def display_score(self):
         self.level  = 1
         self.hi_score = 1000
-       # screen.blit(top_bluebg, (0, 0))
-        pygame.draw.line(screen, white, (0, 3), (600, 3), 5)
+        screen.blit(top_bluebg, (0, 0))
+        pygame.draw.line(screen, white, (0, 4), (600, 4), 7)
         draw_text('SC=' + str(self.score), piratefont, white, int(10), int(8))
         draw_text('LEV=' + str(self.level), piratefont, white, int(200), int(8))
         draw_text('HI=' + str(self.hi_score), piratefont, white, int(400), int(8))
-        pygame.draw.line(screen, white, (0, 42), (600, 42), 5)
+        pygame.draw.line(screen, white, (0, 45), (600, 45), 7)
         fonts = pygame.font.get_fonts()
         # for font in fonts:
         #     print(font)
@@ -213,9 +213,9 @@ class Bullets(pygame.sprite.Sprite):
 
     def update(self, scoreBoard):
         self.rect.y -= 5
-        if self.rect.bottom < 55:
+        if self.rect.bottom < 57:
             self.kill()
-        if pygame.sprite.spritecollide(self, mysteryship_group, True) or pygame.sprite.spritecollide(self, mysteryrabbit_group, True) or pygame.sprite.spritecollide(self, mysteryscorebox_group, True):
+        if pygame.sprite.spritecollide(self, duck_group, True) or pygame.sprite.spritecollide(self, rabbit_group, True) or pygame.sprite.spritecollide(self, scorebox5_group, True) or pygame.sprite.spritecollide(self, scorebox10_group, True) or pygame.sprite.spritecollide(self, owl_group, True):
             scoreBoard.set_score(scoreBoard.get_score() + 1)
             scoreBoard.display_score()
             self.kill()
@@ -253,30 +253,45 @@ class Alien_Bullets(pygame.sprite.Sprite):
         self.rect.y += 2
         if self.rect.top > screen_height:
             self.kill()
-        if pygame.sprite.spritecollide(self, mysteryship_group, False, pygame.sprite.collide_mask):
+        if pygame.sprite.spritecollide(self, duck_group, False, pygame.sprite.collide_mask):
             self.kill()
             explosion2_fx.play()
             # reduce spaceship health
-            spaceship.health_remaining -= 1
+            gun.health_remaining -= 1
             explosion = Explosion(self.rect.centerx, self.rect.centery, 1)
             explosion_group.add(explosion)
 
-        if pygame.sprite.spritecollide(self, mysteryrabbit_group, False, pygame.sprite.collide_mask):
+        if pygame.sprite.spritecollide(self, rabbit_group, False, pygame.sprite.collide_mask):
             self.kill()
             explosion2_fx.play()
             # reduce spaceship health
-            spaceship.health_remaining -= 1
+            gun.health_remaining -= 1
             explosion = Explosion(self.rect.centerx, self.rect.centery, 1)
             explosion_group.add(explosion)
 
-        if pygame.sprite.spritecollide(self, mysteryscorebox_group, False, pygame.sprite.collide_mask):
+        if pygame.sprite.spritecollide(self, scorebox5_group, False, pygame.sprite.collide_mask):
             self.kill()
             explosion2_fx.play()
             # reduce spaceship health
-            spaceship.health_remaining -= 1
+            gun.health_remaining -= 1
             explosion = Explosion(self.rect.centerx, self.rect.centery, 1)
             explosion_group.add(explosion)
 
+        if pygame.sprite.spritecollide(self, scorebox10_group, False, pygame.sprite.collide_mask):
+            self.kill()
+            explosion2_fx.play()
+            # reduce spaceship health
+            gun.health_remaining -= 1
+            explosion = Explosion(self.rect.centerx, self.rect.centery, 1)
+            explosion_group.add(explosion)
+
+        if pygame.sprite.spritecollide(self, owl_group, False, pygame.sprite.collide_mask):
+            self.kill()
+            explosion2_fx.play()
+            # reduce spaceship health
+            gun.health_remaining -= 1
+            explosion = Explosion(self.rect.centerx, self.rect.centery, 1)
+            explosion_group.add(explosion)
 # create Explosion class
 class Explosion(pygame.sprite.Sprite):
     def __init__(self, x, y, size):
@@ -320,22 +335,48 @@ class RowTracker():
     def getStartRow(self):
         return self.startRow
 
-class Mysteryship(pygame.sprite.Sprite):
+class Duck(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
         self.init_x_pos = x
         self.init_y_pos = y
-        self.image = pygame.image.load("img/alien1.png")
+        self.image = pygame.image.load("img/duck.png")
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
-        self.ufo_move_counter = 0
-        self.ufo_move_direction = 1
+        self.duck_move_counter = 0
+        self.duck_move_direction = 1
 
 
     def update(self):
-        self.rect.x += self.ufo_move_direction
-        self.ufo_move_counter += 10
-        if abs(self.ufo_move_counter) > 6000:
+        self.rect.x += self.duck_move_direction
+        self.duck_move_counter += 10
+        if abs(self.duck_move_counter) > 6000:
+            #self.ufo_move_direction *= -1
+
+            #self.rect = self.image.get_rect()
+            #self.rect.center = [self.init_x_pos, self.init_y_pos]
+            #self.ufo_move_counter = 0
+            #self.ufo_move_direction = 1
+            #self.ufo_move_counter *= self.ufo_move_direction
+            self.kill()
+
+
+class Owl(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.init_x_pos = x
+        self.init_y_pos = y
+        self.image = pygame.image.load("img/owl.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.owl_move_counter = 0
+        self.owl_move_direction = 1
+
+
+    def update(self):
+         self.rect.x += self.owl_move_direction
+         self.owl_move_counter += 10
+         if abs(self.owl_move_counter) > 6000:
             #self.ufo_move_direction *= -1
 
             #self.rect = self.image.get_rect()
@@ -347,11 +388,10 @@ class Mysteryship(pygame.sprite.Sprite):
 
 
 
-
-class MysteryRabbit(pygame.sprite.Sprite):
+class Rabbit(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load("img/alien2.png")
+        self.image = pygame.image.load("img/rabbit.png")
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
         self.ufo_move_counter = 0
@@ -388,10 +428,28 @@ class EmptyAmmo(pygame.sprite.Sprite):
         if remove:
             self.kill()
 
-class MysteryScoreBox(pygame.sprite.Sprite):
+class ScoreBox5(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load("img/alien3.png")
+        self.image = pygame.image.load("img/5.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.ufo_move_counter = 0
+        self.ufo_move_direction = 1
+
+
+    def update(self):
+        self.rect.x += self.ufo_move_direction
+        self.ufo_move_counter += 10
+        if abs(self.ufo_move_counter) > 6000:
+            #self.ufo_move_direction *= -1
+            #self.ufo_move_counter *= self.ufo_move_direction
+            self.kill()
+
+class ScoreBox10(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("img/10.png")
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
         self.ufo_move_counter = 0
@@ -407,14 +465,16 @@ class MysteryScoreBox(pygame.sprite.Sprite):
             self.kill()
 
 # create sprite groups
-spaceship_group = pygame.sprite.Group()
+gun_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
 alien_group = pygame.sprite.Group()
 alien_bullet_group = pygame.sprite.Group()
 explosion_group = pygame.sprite.Group()
-mysteryship_group = pygame.sprite.Group()
-mysteryrabbit_group = pygame.sprite.Group()
-mysteryscorebox_group = pygame.sprite.Group()
+duck_group = pygame.sprite.Group()
+rabbit_group = pygame.sprite.Group()
+scorebox5_group = pygame.sprite.Group()
+scorebox10_group = pygame.sprite.Group()
+owl_group = pygame.sprite.Group()
 ammo_group = pygame.sprite.Group()
 ammo_tracker = AmmoTracker()
 ammo_tracker.set_fire_button_press(False)
@@ -427,7 +487,7 @@ def create_ammo_bar():
     for x_position in range(ammo_tracker.get_ammo_count()):
         print("ammo" + str(x_position))
         create_ammo(x_position, "ammo")
-    ammo_tracker.display_score()
+    #ammo_tracker.display_score()
 
 def create_ammo(x_position, type):
     spacing = 5
@@ -438,35 +498,42 @@ def create_ammo(x_position, type):
         empty_ammo = EmptyAmmo(x_position * spacing, 790)
         ammo_group.add(empty_ammo)
 
-def create_ufos():
+def create_artefacts():
     # generate ufo
     for row in range(rows):
         for item in range(cols):
-            spacing = random.randint(40, 100)
-            offset = random.randint(1, 7)
-            item_type = random.randint(1, 3)
+            spacing = random.randint(60, 120)
+            offset = random.randint(1, 30)
+            item_type = random.randint(1, 5)
             if item_type == 1:
-                mystery_ship = Mysteryship(offset + item * spacing, 400 + row * 70)
-                mysteryship_group.add(mystery_ship)
+                duck = Duck(offset + (item * spacing), 400 + row * 70)
+                duck_group.add(duck)
             elif item_type == 2:
-                mystery_rabbit = MysteryRabbit(offset + item * spacing, 400 + row * 70)
-                mysteryrabbit_group.add(mystery_rabbit)
+                rabbit = Rabbit(offset + (item * spacing), 400 + row * 70)
+                rabbit_group.add(rabbit)
             elif item_type == 3:
-                mystery_scorebox = MysteryScoreBox(offset + item * spacing, 400 + row * 70)
-                mysteryscorebox_group.add(mystery_scorebox)
+                scorebox5 = ScoreBox5(offset + (item * spacing), 400 + row * 70)
+                scorebox5_group.add(scorebox5)
+            elif item_type == 4:
+                scorebox10 = ScoreBox10(offset + (item * spacing), 400 + row * 70)
+                scorebox10_group.add(scorebox10)
+            elif item_type == 5:
+                owl = Owl(offset + (item * spacing), 400 + row * 70)
+                owl_group.add(owl)
+
 score = 0
 draw_bg()
 scoreBoard = ScoreBoard(0)
 scoreBoard.display_score()
 create_ammo_bar()
-create_ufos()
+create_artefacts()
 
 
 #screen.fill((255,255,0))
 #pygame.display.update()
 # create player
-spaceship = Spaceship(int(screen_width / 2), screen_height - 100, 3)
-spaceship_group.add(spaceship)
+gun = Gun(int(screen_width / 2), screen_height - 100, 3)
+gun_group.add(gun)
 
 # create UFO
 # mystery = Mysteryship(300, 60)
@@ -501,24 +568,26 @@ while run:
             last_alien_shot = time_now
 
         # check if all the aliens have been killed
-        if len(mysteryship_group) == 0:
-            create_ufos()
+        if len(duck_group) == 0:
+            create_artefacts()
 
-        if len(mysteryship_group) == 0 and len(mysteryrabbit_group) and len(mysteryscorebox_group):
+        if len(duck_group) == 0 and len(rabbit_group) and len(scorebox5_group):
             game_over = 1
 
         if game_over == 0:
             # update spaceship
-            game_over = spaceship.update()
+            game_over = gun.update()
 
             # update sprite groups
             bullet_group.update(scoreBoard)
             alien_group.update()
             alien_bullet_group.update( )
 
-            mysteryship_group.update()
-            mysteryrabbit_group.update()
-            mysteryscorebox_group.update()
+            duck_group.update()
+            rabbit_group.update()
+            scorebox5_group.update()
+            scorebox10_group.update()
+            owl_group.update()
 
             if ammo_tracker.get_fire_button_press():
                 print("ammo tracker" + str (ammo_tracker.get_ammo_count()))
@@ -529,16 +598,16 @@ while run:
 
         else:
             if game_over == -1:
-                draw_text('GAME OVER!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2 + 50))
+                draw_text('GAME OVER!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2-150))
             if game_over == 1:
-                draw_text('YOU WIN!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2 + 50))
+                draw_text('YOU WIN!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2 - 150))
             if game_over == 2:
-                draw_text('OUT OF AMMO BASTARD!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2 + 50))
+                draw_text('OUT OF AMMO BASTARD!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2- 150))
 
 
     if countdown > 0:
-        draw_text('GET READY!', font40, white, int(screen_width / 2 - 110), int(screen_height / 2 + 50))
-        draw_text(str(countdown), font40, white, int(screen_width / 2 - 10), int(screen_height / 2 + 100))
+        draw_text('GET READY!', font40, white, int(screen_width / 2 - 110), int(screen_height / 2 - 150))
+        draw_text(str(countdown), font40, white, int(screen_width / 2 - 10), int(screen_height / 2 - 125))
         count_timer = pygame.time.get_ticks()
         if count_timer - last_count > 1000:
             countdown -= 1
@@ -549,15 +618,17 @@ while run:
     explosion_group.update()
 
     # draw sprite groups
-    spaceship_group.draw(screen)
+    gun_group.draw(screen)
     bullet_group.draw(screen)
     alien_group.draw(screen)
     alien_bullet_group.draw(screen)
     explosion_group.draw(screen)
 
-    mysteryship_group.draw(screen)
-    mysteryrabbit_group.draw(screen)
-    mysteryscorebox_group.draw(screen)
+    duck_group.draw(screen)
+    rabbit_group.draw(screen)
+    scorebox5_group.draw(screen)
+    scorebox10_group.draw(screen)
+    owl_group.draw(screen)
 
     ammo_group.draw(screen)
 
