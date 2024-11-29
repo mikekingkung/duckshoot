@@ -1,3 +1,5 @@
+import time
+
 import pygame
 from pygame import mixer
 import random
@@ -47,7 +49,7 @@ last_alien_shot = pygame.time.get_ticks()
 countdown = 3
 last_count = pygame.time.get_ticks()
 game_over = 0  # 0 is no game over, 1 means player has won, -1 means player has lost
-
+object_counter = rows * cols
 # define colours
 red = (255, 0, 0)
 green = (0, 255, 0)
@@ -55,11 +57,11 @@ white = (255, 255, 255)
 
 # load image
 bg = pygame.image.load("img/bg.png")
-bg_blue = pygame.image.load("img/bg_blue.png")
+bg_blue = pygame.image.load("img/new_bg_blue.png")
 top_bg = pygame.image.load("img/top_bg.png")
 top_bluebg = pygame.image.load("img/top_blue_bg.png")
 
-initial_ammo_count = 50
+initial_ammo_count = 27
 firebutton_press = False
 
 # def play_music(midi_filename):
@@ -86,7 +88,7 @@ firebutton_press = False
 
 # listen for interruptions
 # try:
-#   # use the midi file you just saved
+#   # use the midi file youjust saved
 #   #play_music(midi_filename)
 # except KeyboardInterrupt:
 #   # if user hits Ctrl/C then exit
@@ -148,17 +150,34 @@ class Gun(pygame.sprite.Sprite):
         self.mask = pygame.mask.from_surface(self.image)
 
         # draw health bar
-        pygame.draw.rect(screen, red, (self.rect.x, (self.rect.bottom + 10), self.rect.width, 15))
-        if self.health_remaining > 0:
-            pygame.draw.rect(screen, green, (
-            self.rect.x, (self.rect.bottom + 10), int(self.rect.width * (self.health_remaining / self.health_start)),
-            15))
-        elif self.health_remaining <= 0:
-            explosion = Explosion(self.rect.centerx, self.rect.centery, 3)
-            explosion_group.add(explosion)
-            self.kill()
-            game_over = -1
+        # pygame.draw.rect(screen, red, (self.rect.x, (self.rect.bottom + 10), self.rect.width, 15))
+        # if self.health_remaining > 0:
+        #     pygame.draw.rect(screen, green, (
+        #     self.rect.x, (self.rect.bottom + 10), int(self.rect.width * (self.health_remaining / self.health_start)),
+        #     15))
+        # elif self.health_remaining <= 0:
+        #     explosion = Explosion(self.rect.centerx, self.rect.centery, 3)
+        #     explosion_group.add(explosion)
+        #     self.kill()
+        #     game_over = -1
         return game_over
+
+
+class TimeBoard():
+
+    def __init__(self, text, counter):
+        self.text = text
+        self.counter = counter
+
+    def display_timer(self):
+        screen.blit(top_bluebg, (530, screen_height - 50))
+        #pygame.draw.line(screen, white, (0, 794), (600, 794), 7)
+        draw_text(str(self.text), piratefont, white, int(530), int(760))
+        #pygame.draw.line(screen, white, (0, 734), (600, 734), 7)
+
+    def setText(self, text):
+        self.text = text
+
 
 class ScoreBoard():
     def __init__(self, initial_score):
@@ -177,7 +196,8 @@ class ScoreBoard():
         pygame.draw.line(screen, white, (0, 4), (600, 4), 7)
         draw_text('SC=' + str(self.score), piratefont, white, int(10), int(8))
         draw_text('LEV=' + str(self.level), piratefont, white, int(200), int(8))
-        draw_text('HI=' + str(self.hi_score), piratefont, white, int(400), int(8))
+        draw_text('HS=' + str(self.hi_score), piratefont, white, int(400), int(8))
+
         pygame.draw.line(screen, white, (0, 45), (600, 45), 7)
         fonts = pygame.font.get_fonts()
         # for font in fonts:
@@ -194,8 +214,10 @@ class AmmoTracker():
         self.ammo_count = ammo_count
 
     def display_score(self):
-        ammo = Ammo(self.ammo_count * 10, 200)
-        ammo_group.add(ammo)
+        print("hello")
+        # draw_text('SC=' + str(self.score), piratefont, white, int(10), int(8))
+        #ammo = Ammo(self.ammo_count * 10, 200)
+        #ammo_group.add(ammo)
 
     def set_fire_button_press(self, button_press):
         self.fire_button_press = button_press
@@ -241,6 +263,14 @@ class Aliens(pygame.sprite.Sprite):
             self.move_direction *= -1
             self.move_counter *= self.move_direction
 
+class ObjectCount():
+    def __init__(self, initial_count):
+        self.object_count = initial_count
+
+    def reduce_object_count(self):
+        self.object_count = self.object_count - 1
+        print("object count:" + str(object_count))
+
 # create Alien Bullets class
 class Alien_Bullets(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -260,6 +290,7 @@ class Alien_Bullets(pygame.sprite.Sprite):
             gun.health_remaining -= 1
             explosion = Explosion(self.rect.centerx, self.rect.centery, 1)
             explosion_group.add(explosion)
+            ObjectCount.reduce_object_count()
 
         if pygame.sprite.spritecollide(self, rabbit_group, False, pygame.sprite.collide_mask):
             self.kill()
@@ -336,75 +367,129 @@ class RowTracker():
         return self.startRow
 
 class Duck(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, direction):
         pygame.sprite.Sprite.__init__(self)
-        self.init_x_pos = x
-        self.init_y_pos = y
+        self.initial_x = x
+        self.initial_y = y
         self.image = pygame.image.load("img/duck.png")
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
         self.duck_move_counter = 0
-        self.duck_move_direction = 1
+        self.duck_move_direction = direction
 
+    def reset(self):
+        x = generate_random_x()
+        y = self.initial_y
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.duck_move_counter = 0
 
     def update(self):
         self.rect.x += self.duck_move_direction
         self.duck_move_counter += 10
         if abs(self.duck_move_counter) > 6000:
-            #self.ufo_move_direction *= -1
-
-            #self.rect = self.image.get_rect()
-            #self.rect.center = [self.init_x_pos, self.init_y_pos]
-            #self.ufo_move_counter = 0
-            #self.ufo_move_direction = 1
-            #self.ufo_move_counter *= self.ufo_move_direction
-            self.kill()
+            self.reset()
 
 
 class Owl(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, direction):
         pygame.sprite.Sprite.__init__(self)
-        self.init_x_pos = x
-        self.init_y_pos = y
+        self.initial_x = x
+        self.initial_y = y
         self.image = pygame.image.load("img/owl.png")
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
         self.owl_move_counter = 0
-        self.owl_move_direction = 1
+        self.owl_move_direction = direction
 
+    def reset(self):
+        x = generate_random_x()
+        y = self.initial_y
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.owl_move_counter = 0
 
     def update(self):
          self.rect.x += self.owl_move_direction
          self.owl_move_counter += 10
          if abs(self.owl_move_counter) > 6000:
-            #self.ufo_move_direction *= -1
-
-            #self.rect = self.image.get_rect()
-            #self.rect.center = [self.init_x_pos, self.init_y_pos]
-            #self.ufo_move_counter = 0
-            #self.ufo_move_direction = 1
-            #self.ufo_move_counter *= self.ufo_move_direction
-            self.kill()
-
+            self.reset()
 
 
 class Rabbit(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, x, y, direction):
         pygame.sprite.Sprite.__init__(self)
+        self.initial_x = x
+        self.initial_y = y
         self.image = pygame.image.load("img/rabbit.png")
         self.rect = self.image.get_rect()
         self.rect.center = [x, y]
         self.ufo_move_counter = 0
-        self.ufo_move_direction = 1
+        self.ufo_move_direction = direction
 
+    def reset(self):
+        x = generate_random_x()
+        y = self.initial_y
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.ufo_move_counter = 0
 
     def update(self):
         self.rect.x += self.ufo_move_direction
         self.ufo_move_counter += 10
         if abs(self.ufo_move_counter) > 6000:
-            #self.ufo_move_direction *= -1
-            #self.ufo_move_counter *= self.ufo_move_direction
-            self.kill()
+            self.reset()
+
+
+
+class ScoreBox5(pygame.sprite.Sprite):
+    def __init__(self, x, y, direction):
+        self.initial_x = x
+        self.initial_y = y
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.image.load("img/5.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.ufo_move_counter = 0
+        self.ufo_move_direction = direction
+
+    def reset(self):
+        x = generate_random_x()
+        y = self.initial_y
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.ufo_move_counter = 0
+
+    def update(self):
+        self.rect.x += self.ufo_move_direction
+        self.ufo_move_counter += 10
+        if abs(self.ufo_move_counter) > 6000:
+            self.reset()
+
+class ScoreBox10(pygame.sprite.Sprite):
+    def __init__(self, x, y, direction):
+        pygame.sprite.Sprite.__init__(self)
+        self.initial_x = x
+        self.initial_y = y
+        self.image = pygame.image.load("img/10.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.ufo_move_counter = 0
+        self.ufo_move_direction = direction
+
+    def reset(self):
+        x = generate_random_x()
+        y = self.initial_y
+        self.rect = self.image.get_rect()
+        self.rect.center = [x, y]
+        self.ufo_move_counter = 0
+
+    def update(self):
+        self.rect.x += self.ufo_move_direction
+        self.ufo_move_counter += 10
+        if abs(self.ufo_move_counter) > 6000:
+            self.reset()
+
 
 class Ammo(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -428,42 +513,6 @@ class EmptyAmmo(pygame.sprite.Sprite):
         if remove:
             self.kill()
 
-class ScoreBox5(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load("img/5.png")
-        self.rect = self.image.get_rect()
-        self.rect.center = [x, y]
-        self.ufo_move_counter = 0
-        self.ufo_move_direction = 1
-
-
-    def update(self):
-        self.rect.x += self.ufo_move_direction
-        self.ufo_move_counter += 10
-        if abs(self.ufo_move_counter) > 6000:
-            #self.ufo_move_direction *= -1
-            #self.ufo_move_counter *= self.ufo_move_direction
-            self.kill()
-
-class ScoreBox10(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load("img/10.png")
-        self.rect = self.image.get_rect()
-        self.rect.center = [x, y]
-        self.ufo_move_counter = 0
-        self.ufo_move_direction = 1
-
-
-    def update(self):
-        self.rect.x += self.ufo_move_direction
-        self.ufo_move_counter += 10
-        if abs(self.ufo_move_counter) > 6000:
-            #self.ufo_move_direction *= -1
-            #self.ufo_move_counter *= self.ufo_move_direction
-            self.kill()
-
 # create sprite groups
 gun_group = pygame.sprite.Group()
 bullet_group = pygame.sprite.Group()
@@ -480,52 +529,72 @@ ammo_tracker = AmmoTracker()
 ammo_tracker.set_fire_button_press(False)
 
 def create_ammo_bar():
-    ammo_tracker.get_ammo_count()
-    print ("ammo_tracker.get_ammo_count()" +str(ammo_tracker.get_ammo_count()))
+    #ammo_tracker.get_ammo_count()
+    #print ("ammo_tracker.get_ammo_count()" +str(ammo_tracker.get_ammo_count()))
     count = ammo_tracker.get_ammo_count()
-    print("count" +  str(count))
+    #print("count" +  str(count))
     for x_position in range(ammo_tracker.get_ammo_count()):
-        print("ammo" + str(x_position))
+        print("mike ammo" + str(x_position))
         create_ammo(x_position, "ammo")
-    #ammo_tracker.display_score()
+    ammo_tracker.display_score()
 
 def create_ammo(x_position, type):
+    #screen.blit(top_bluebg, (0, screen_height - 100))
     spacing = 5
     if type == "ammo":
-        ammo = Ammo(x_position * spacing, 790)
+        ammo = Ammo(x_position * 20 , 790)
         ammo_group.add(ammo)
     else:
-        empty_ammo = EmptyAmmo(x_position * spacing, 790)
+        empty_ammo = EmptyAmmo(x_position * 20, 790)
         ammo_group.add(empty_ammo)
 
 def create_artefacts():
     # generate ufo
     for row in range(rows):
+        if row == 0:
+            direction = 1
+        elif row == 1:
+            direction = -1
+        elif row == 2:
+            direction = 1
+        else:
+            direction = 1
         for item in range(cols):
             spacing = random.randint(60, 120)
             offset = random.randint(1, 30)
             item_type = random.randint(1, 5)
             if item_type == 1:
-                duck = Duck(offset + (item * spacing), 400 + row * 70)
+                duck = Duck(offset + (item * spacing), 400 + row * 70, direction)
                 duck_group.add(duck)
             elif item_type == 2:
-                rabbit = Rabbit(offset + (item * spacing), 400 + row * 70)
+                rabbit = Rabbit(offset + (item * spacing), 400 + row * 70, direction)
                 rabbit_group.add(rabbit)
             elif item_type == 3:
-                scorebox5 = ScoreBox5(offset + (item * spacing), 400 + row * 70)
+                scorebox5 = ScoreBox5(offset + (item * spacing), 400 + row * 70, direction)
                 scorebox5_group.add(scorebox5)
             elif item_type == 4:
-                scorebox10 = ScoreBox10(offset + (item * spacing), 400 + row * 70)
+                scorebox10 = ScoreBox10(offset + (item * spacing), 400 + row * 70, direction)
                 scorebox10_group.add(scorebox10)
             elif item_type == 5:
-                owl = Owl(offset + (item * spacing), 400 + row * 70)
+                owl = Owl(offset + (item * spacing), 400 + row * 70, direction)
                 owl_group.add(owl)
+
+def generate_random_x():
+    spacing = random.randint(60, 120)
+    offset = random.randint(1, 30)
+    item =  random.randint(1, cols)
+    x_val = offset + (item * spacing)
+    return x_val
 
 score = 0
 draw_bg()
 scoreBoard = ScoreBoard(0)
 scoreBoard.display_score()
 create_ammo_bar()
+object_count = ObjectCount(object_counter)
+counter, text = 10, '10'.rjust(3)
+timeBoard = TimeBoard(counter, text)
+
 create_artefacts()
 
 
@@ -549,12 +618,16 @@ gun_group.add(gun)
 
 run = True
 #song_fx.play()
+
+pygame.time.set_timer(pygame.USEREVENT, 1000)
+counter, text = 30, '30'.rjust(3)
 while run:
     ammo_tracker.set_fire_button_press(False)
     clock.tick(fps)
 
     # draw background
     draw_bg()
+
 
     if countdown == 0:
         # create random alien bullets
@@ -568,10 +641,10 @@ while run:
             last_alien_shot = time_now
 
         # check if all the aliens have been killed
-        if len(duck_group) == 0:
-            create_artefacts()
+        #if len(duck_group) == 0:
+        #    create_artefacts()
 
-        if len(duck_group) == 0 and len(rabbit_group) and len(scorebox5_group):
+        if len(duck_group) == 0 and len(rabbit_group) == 0 and len(scorebox5_group) == 0  and len(scorebox10_group)==0 and len(owl_group) ==0 and len(rabbit_group) == 0:
             game_over = 1
 
         if game_over == 0:
@@ -590,7 +663,8 @@ while run:
             owl_group.update()
 
             if ammo_tracker.get_fire_button_press():
-                print("ammo tracker" + str (ammo_tracker.get_ammo_count()))
+                #screen.blit(top_bluebg, (0, screen_height - 110))
+                print("ammo tracker remove" + str (ammo_tracker.get_ammo_count()))
                 ammo_group.update(False)
                 create_ammo(ammo_tracker.get_ammo_count(), "emptyammo")
             if ammo_tracker.get_ammo_count()<=0:
@@ -599,11 +673,20 @@ while run:
         else:
             if game_over == -1:
                 draw_text('GAME OVER!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2-150))
+                time.sleep(3)
+                run = False
             if game_over == 1:
                 draw_text('YOU WIN!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2 - 150))
+                time.sleep(3)
+                run = False
             if game_over == 2:
-                draw_text('OUT OF AMMO BASTARD!', font40, white, int(screen_width / 2 - 100), int(screen_height / 2- 150))
-
+                draw_text('OUT OF AMMO!', font40, white, int(screen_width / 2 - 150), int(screen_height / 2- 150))
+                time.sleep(3)
+                run = False
+            if game_over == 3:
+                draw_text('OUT OF TIME!', font40, white, int(screen_width / 2 - 150), int(screen_height / 2- 150))
+                time.sleep(3)
+                run = False
 
     if countdown > 0:
         draw_text('GET READY!', font40, white, int(screen_width / 2 - 110), int(screen_height / 2 - 150))
@@ -636,7 +719,15 @@ while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-
+        if event.type == pygame.USEREVENT:
+            counter -= 1
+            if counter > 0:
+                text = str(counter).rjust(3)
+            else:
+                text = "0"
+                game_over = 3
+            timeBoard.setText(text)
+            timeBoard.display_timer()
     pygame.display.update()
 
 pygame.quit()
